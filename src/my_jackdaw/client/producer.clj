@@ -12,14 +12,16 @@
 
 (def my-producer (jc/producer producer-config))
 
-(def outcome (jc/produce! my-producer {:topic-name "jackdaw"} "1" "hi mom!"))
+; (.close my-producer)
 
-(type outcome)
+; (def outcome (jc/produce! my-producer {:topic-name "jackdaw"} "1" "hi mom!"))
+
+; (type outcome)
 ; clojure.lang.Delay
 
-(realized? outcome)
+; (realized? outcome)
 
-(deref outcome)
+; (deref outcome)
 ; Result of sending is a map
 ; {:topic-name "jackdaw",
 ;  :partition 9,
@@ -29,6 +31,21 @@
 ;  :serialized-value-size 7}
 
 ; Note can (and probably should) combine jc/producer and jc/produce!
-(with-open [my-producer (jc/producer producer-config)]
-  (dotimes [n 100]
-    @(jc/produce! my-producer {:topic-name "jackdaw"} (str n) "Yo mom!")))
+;(with-open [my-producer (jc/producer producer-config)]
+;  (dotimes [n 10]
+;    @(jc/produce! my-producer {:topic-name "jackdaw"} (str n) "Yo mom!")))
+
+;(take 10 (repeatedly #(rand-int 10)))
+
+
+(def results
+  (pmap
+    #(deref (jc/produce! my-producer {:topic-name "jackdaw"} (str (rand-int %)) "Yo mom!"))
+    (repeat 100000 1000)))
+
+(map #(vector
+       (first %)
+       (count (second %)))
+     (group-by :partition results))
+
+(map first (group-by :partition results))

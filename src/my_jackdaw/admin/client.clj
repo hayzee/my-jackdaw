@@ -1,77 +1,97 @@
 (ns my-jackdaw.admin.client
-  (:require [jackdaw.admin :as ja]))
+  (:require [mount.core :refer [defstate]]
+            [jackdaw.admin :as ja]))
 
-; Docker kafka setup:
+(defstate admin-client-config
+          :start {"bootstrap.servers" "localhost:9092"})
 
-; https://hub.docker.com/r/bitnami/kafka/
+(defn create-client
+  [admin-client-config]
+  (ja/->AdminClient admin-client-config))
 
-; https://lankydan.dev/running-kafka-locally-with-docker
+(defstate client
+          :start (create-client admin-client-config)
+          :stop (.close client))
 
-; docker-compose.yml:
+(defn running?
+  []
+  (my-jackdaw.core/timeout 1000
+                           #(ja/describe-cluster client)))
 
-;version: "3"
-;services:
-;  zookeeper:
-;    image: 'bitnami/zookeeper:latest'
-;    ports:
-;      - '2181:2181'
-;    environment:
-;      - ALLOW_ANONYMOUS_LOGIN=yes
-;kafka:
-;  image: 'bitnami/kafka:latest'
-;  ports:
-;    - '9092:9092'
-;  environment:
-;    - KAFKA_BROKER_ID=1
-;    - KAFKA_LISTENERS=PLAINTEXT://:9092
-;    - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
-;    - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-;    - ALLOW_PLAINTEXT_LISTENER=yes
-;  depends_on:
-;    - zookeeper
+(defn delete-topics!
+  []
+  (println "delete all topics")
+  (ja/delete-topics! client (ja/list-topics client)))
 
-; to start
-; --------
-; $ docker-compose up -d
+(defn create-topics!
+  "Create topics from one or more topic configurations."
+  [& topic-configs]
+  (ja/create-topics! client topic-configs))
 
-; run a shell in a docker container
-; ---------------------------------
-; $ docker exec -it e3c52ccf6deb sh                  ; replace e3c52ccf6deb with actual image name.
+(defn list-topics
+  "List all topics."
+  []
+  (ja/list-topics client))
 
-; when finished
-; -------------
-; $ docker-compose down --remove-orphans
+(defn describe-topics
+  "Describe the topics listed in topic names. If no topic-names are provided,
+  descriptions for all topics are returned.
 
-(def client (ja/->AdminClient {"bootstrap.servers" "localhost:9092"}))
+  e.g. (describe-topics \"my-topic\" \"my-other-topic\" ...
+  "
+  [& topic-names]
+  (ja/describe-topics client (doto (map (fn [name] {:topic-name name}) topic-names) clojure.pprint/pprint)))
 
-(ja/create-topics! client [{:topic-name "jackdaw"
-                            :partition-count 15
-                            :replication-factor 1
-                            :topic-config {"cleanup.policy" "compact"}}])
 
-(ja/list-topics client)
+;(mount.core/start)
+;(describe-topics "jackdaw" "jackdaw")
 
-(ja/describe-topics client [{:topic-name "jackdaw"}])
 
-(ja/describe-topics-configs client [{:topic-name "jackdaw"}])
+(comment
+  ;(ja/describe-topics-configs client [{:topic-name "jackdaw"}])
 
-(ja/alter-topic-config! client [{:topic-name "jackdaw"
-                                 :topic-config {"delete.retention.ms" "1000"}}])
 
-(ja/describe-cluster client)
+  (ja/alter-topic-config! client [{:topic-name   "jackdaw"
+                                   :topic-config {"delete.retention.ms" "1000"}}])
 
-(ja/get-broker-config client 1)
+  (ja/describe-cluster client)
 
-(ja/partition-ids-of-topics client #_(ja/list-topics client))
+  (ja/get-broker-config client 1)
 
-; can nest function calls - e.g. delete all topics
-(ja/delete-topics! client (ja/list-topics client))
+  (ja/partition-ids-of-topics client #_(ja/list-topics client))
 
-; or can delete individual topics
-; (ja/delete-topics! client [{:topic-name "jackdaw"}])
+  ; can nest function calls - e.g. delete all topics
+  ;(ja/delete-topics! client (ja/list-topics client))
 
-; not sure what this does.
-;(ja/alter-topics* client {:topic-name "jackdaw"
-;                          :partition-count 21
-;                          :replication-factor 1
-;                          :topic-config {"cleanup.policy" "compact"}})
+  ; or can delete individual topics
+  ; (ja/delete-topics! client [{:topic-name "jackdaw"}])
+
+  ; not sure what this does.
+  ;(ja/alter-topics* client {:topic-name "jackdaw"
+  ;                          :partition-count 21
+  ;                          :replication-factor 1
+  ;                          :topic-config {"cleanup.policy" "compact"}})
+
+  (defn get-consumer-groups
+    [client]
+    (mapv
+      (fn [cgl]
+        {:group-id                 (.groupId cgl)
+         :is-simple-consumer-group (.isSimpleConsumerGroup cgl)}
+        )
+      @(.all (.listConsumerGroups client))))
+
+  (get-consumer-groups client)
+
+  (defn client-metrics
+    [client]
+    (map (fn [me]
+           {:name        (.name (.getKey me))
+            :description (.description (.metricName (.getValue me)))
+            :datatype    (type (.metricValue (.getValue me)))
+            :value       (.metricValue (.getValue me))
+            }) (.metrics client)))
+
+  (client-metrics client)
+
+  )
