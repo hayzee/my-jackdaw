@@ -16,16 +16,16 @@
   (ja/list-topics client))
 
 (defn delete-topics!
-  "Given an `AdminClient` and a sequence of topic descriptors, marks the topics for
-  deletion.  Does not block until the topics are deleted, just until the deletion
-  request(s) are acknowledged."
+  "Given a sequence of topic descriptors, marks the topics for deletion.  Does not
+  block until the topics are deleted, just until the deletion request(s) are
+  acknowledged."
   [topics]
   (ja/delete-topics! client topics))
 
 (defn create-topics!
-  "Given an `AdminClient` and a collection of topic descriptors, create the specified
-  topics with their configuration(s).  Does not block until the created topics are ready.
-  It may take some time for replicas and leaders to be chosen for newly created topics.
+  "Given a collection of topic descriptors, create the specified topics with their
+  configuration(s).  Does not block until the created topics are ready. It may take
+  some time for replicas and leaders to be chosen for newly created topics.
   See `#'topics-ready?`, `#'topic-exists?` and `#'retry-exists?` for tools with which to
   wait for topics to be ready."
   [topics]
@@ -58,28 +58,49 @@
    (ja/alter-topic-config! client topics)))
 
 (defn describe-cluster
+  "Returns a `DescribeClusterResult` describing the cluster"
   []
   (ja/describe-cluster client))
 
 (defn get-broker-config
+  "Returns the broker config as a map. Broker-id is an int, typically 0-2.
+   Get the list of valid broker ids using describe-cluster"
   [broker-id]
   (ja/get-broker-config client broker-id))
 
 (defn topics-ready?
+  "Given a sequence topic descriptors, return `true` if and only if all listed
+  topics have a leader and in-sync replicas.
+  This can be used to determine if some set of newly created topics are healthy
+  yet, or detect whether leader re-election has finished following the demise
+  of a Kafka broker"
   [topics]
   (ja/topics-ready? client topics))
 
 (defn partition-ids-of-topics
+  "Given an optional sequence of topics, produces a mapping from topic names to
+  a sequence of the partition IDs for that topic.  By default, enumerates the
+  partition IDs for all topics."
   [topics]
   (ja/partition-ids-of-topics client topics))
 
 (defn topic-exists?
+  "Verifies the existence of the topic.  Does not verify any config. details or
+  values.
+
+  Where wait-ms is provided, returns `true` if topic exists, otherwise spins
+  as configured."
   ([topic]
    (ja/topic-exists? client topic))
   ([topic num-retries wait-ms]
     (ja/retry-exists? client topic num-retries wait-ms)))
 
 (defn topics-exist?
+  "Verifies the existence of topics.  Does not verify any config. details or
+  values.
+
+  Where wait-ms is provided, returns `true` if topic exists, otherwise spins
+  as configured."
   ([topics]
    (map #(topic-exists? %) topics))
   ([topics num-retries wait-ms]
