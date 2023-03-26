@@ -15,7 +15,7 @@
 
                  ; logging
                  [com.fzakaria/slf4j-timbre "0.3.21"]
-                 [com.taoensso/timbre "5.2.1"]
+                 [com.taoensso/timbre "6.1.0"]
 
                  ; components
                  [mount "0.1.17"]

@@ -1,35 +1,74 @@
 (ns my-jackdaw.admin.client-test
   (:require [clojure.test :refer :all]
-            [jackdaw.admin :as ja]
             [my-jackdaw.admin.client :as sut]))
 
-(defn with-admin-client
+(def topics-to-create
+  [{:topic-name         "jackdaw"
+    :partition-count    5
+    :replication-factor 1
+    :delete-topic-enable true
+    :topic-config       {"cleanup.policy" "compact"}}
+   {:topic-name         "banana"
+    :partition-count    5
+    :replication-factor 1
+    :delete-topic-enable true
+    :topic-config       {"cleanup.policy" "compact"}}
+   {:topic-name         "apples"
+    :partition-count    5
+    :replication-factor 1
+    :delete-topic-enable true
+    :topic-config       {"cleanup.policy" "compact"}}])
+
+(defn clear-topics-fixture
   [f]
-  (with-redefs [sut/client (ja/->AdminClient {"bootstrap.servers" "localhost:9092"})]
-    (try
-     (f)
-     (finally
-       (println "closing client")
-       (.close sut/client)))))
+  (println "set-up deleting topics")
+  (sut/delete-topics! (sut/list-topics))
+  (f)
+  (println "clear-down deleting topics")
+  (sut/delete-topics! (sut/list-topics)))
 
-;(use-fixtures :once)
-(use-fixtures :each with-admin-client)
+(use-fixtures :once clear-topics-fixture)
 
-(deftest create-topics!-test
+(deftest create-list-and-delete-topics-test
 
-  (sut/delete-topics!)
+  (testing "Can create topics"
+    (sut/create-topics! topics-to-create))
 
-;  (while (seq (sut/list-topics)))
-  (Thread/sleep 200)
+  (testing "Can list topics"
+    (is (= [{:topic-name "apples"}
+            {:topic-name "banana"}
+            {:topic-name "jackdaw"}] (sut/list-topics))))
 
-  (is (= '() (sut/list-topics)))
+  (testing "Can describe topics"
+    (is (= 3 (count (sut/describe-topics)))))
 
-  (is (= {:topic-name         "jackdaw"
-          :partition-count    5
-          :replication-factor 1
-          :topic-config       {"cleanup.policy" "compact"}}
-         (sut/create-topics!
-               {:topic-name         "jackdaw"
-                :partition-count    5
-                :replication-factor 1
-                :topic-config       {"cleanup.policy" "compact"}}))))
+  (testing "Can describe topic configs"
+    (is (= 3 (count (sut/describe-topic-configs)))))
+
+  (testing "Can alter topic configs"
+    (sut/alter-topic-configs [{:topic-name          "apples"
+                               :topic-config        {"cleanup.policy" "delete"}}])
+    (is (= "delete"
+           (-> (sut/describe-topic-configs [{:topic-name "apples"}])
+               first
+               val
+               (get "cleanup.policy")
+               :value))))
+
+  (testing "Can describe cluster"
+    (is 3 (count (keys (sut/describe-cluster)))))
+
+  (testing "Can get broker config"
+    (is 219 (count (keys (sut/get-broker-config 1)))))
+
+  (testing "Can test topics ready"
+    (is (= true (sut/topics-ready? (sut/list-topics)))))
+
+  (testing "Can get topic partition ids"
+    (is (= {"banana" [0 1 2 3 4], "jackdaw" [0 1 2 3 4], "apples" [0 1 2 3 4]}
+           (sut/partition-ids-of-topics (sut/list-topics)))))
+
+  (testing "Can delete topics"
+    (sut/delete-topics! (sut/list-topics))
+    (is (= [] (sut/list-topics)))))
+
