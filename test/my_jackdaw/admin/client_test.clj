@@ -68,7 +68,14 @@
     (is (= {"banana" [0 1 2 3 4], "jackdaw" [0 1 2 3 4], "apples" [0 1 2 3 4]}
            (sut/partition-ids-of-topics (sut/list-topics)))))
 
+  (testing "Can test for topic existence"
+    (is (= true
+           (sut/topic-exists? (first (sut/list-topics))))))
+
+  (testing "Can test for many topic's existence"
+    (is (= true
+           (sut/topics-exist? (sut/list-topics)))))
+
   (testing "Can delete topics"
     (sut/delete-topics! (sut/list-topics))
     (is (= [] (sut/list-topics)))))
-

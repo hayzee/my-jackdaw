@@ -20,10 +20,11 @@
               (loop []
                 (let [recs (jc/poll consumer 1000)]
                   (doseq [r recs]
-                    (clojure.pprint/pprint (type r)))
+                    (clojure.pprint/pprint r))
                   )
                 (recur))))
 
+(.stop consumer)
 (future-cancel cloop1)
 
 (jc/poll consumer2 10)
@@ -54,11 +55,3 @@
 
 (count records)
 
-;(jc/consumer )
-
-;
-;
-;
-;(.listConsumerGroups (.AdminClient))
-
-(jc/)

@@ -102,9 +102,9 @@
   Where wait-ms is provided, returns `true` if topic exists, otherwise spins
   as configured."
   ([topics]
-   (map #(topic-exists? %) topics))
+   (every? true? (map #(topic-exists? %) topics)))
   ([topics num-retries wait-ms]
-   (map #(topic-exists? % num-retries wait-ms) topics)))
+   (every? true? (map #(topic-exists? % num-retries wait-ms) topics))))
 
 (defn client?
   "Return `true` if and only if given an `AdminClient` instance."
