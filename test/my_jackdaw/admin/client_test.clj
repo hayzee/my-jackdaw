@@ -78,4 +78,7 @@
 
   (testing "Can delete topics"
     (sut/delete-topics! (sut/list-topics))
-    (is (= [] (sut/list-topics)))))
+    (is (= [] (sut/list-topics))))
+
+  (testing "Can test for a client"
+    (is (= true (sut/client? sut/client)))))
