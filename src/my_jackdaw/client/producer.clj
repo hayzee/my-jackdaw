@@ -39,7 +39,7 @@
     (.close ^KafkaProducer producer)
    (swap! producers dissoc producer-name)))
 
-(defn shutdown-producers
+(defn close-producers
   []
   (doseq [producer-name (list-producers)]
     (close-producer producer-name)))
