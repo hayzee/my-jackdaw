@@ -10,11 +10,9 @@
    "key.deserializer" "org.apache.kafka.common.serialization.StringDeserializer"
    "value.deserializer" "org.apache.kafka.common.serialization.StringDeserializer"})
 
-(def consumer (jc/subscribed-consumer consumer-config [{:topic-name "jackdaw"}]))
-(def consumer2 (jc/subscribed-consumer consumer-config [{:topic-name "jackdaw"}]))
-(def consumer3 (jc/subscribed-consumer consumer-config [{:topic-name "jackdaw"}]))
-(def consumer4 (jc/subscribed-consumer consumer-config [{:topic-name "jackdaw"}]))
-(def consumer5 (jc/subscribed-consumer consumer-config [{:topic-name "jackdaw"}]))
+(defn create-consumer
+  [topic-config]
+  (jc/subscribed-consumer consumer-config [{:topic-name "jackdaw"}]))
 
 (def cloop1 (future
               (loop []
