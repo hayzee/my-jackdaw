@@ -2,45 +2,38 @@
   (:require [jackdaw.client :as jc])
   (:import (org.apache.kafka.clients.producer KafkaProducer)))
 
-; PRODUCER
-
 (defonce ^:private producers (atom {}))
 
-(def producer-config
-  {"bootstrap.servers" "localhost:9092"
-   "key.serializer" "org.apache.kafka.common.serialization.StringSerializer"
-   "value.serializer" "org.apache.kafka.common.serialization.StringSerializer"
-   "acks" "all"
-   "client.id" "bob2"})
+(defn get-producer
+  [client-id]
+  (get @producers client-id))
 
 (defn create-producer
-  [producer-name producer-config]
-  (if (get (deref producers) name)
-    (ex-info "A producer of this name already exists" {:name name})
-    (swap! producers assoc producer-name (jc/producer producer-config))))
+  [client-id producer-config]
+  (if (get-producer client-id)
+    (throw (ex-info "Producer already exists" {"client.id" client-id}))
+    (swap! producers assoc client-id (jc/producer (assoc producer-config
+                                                        "client.id" client-id)))))
+
+(defn close-producer
+  [client-id]
+  (if-let [producer (get-producer client-id)]
+    (do
+      (.close ^KafkaProducer producer)
+      (swap! producers dissoc client-id))
+    (throw (ex-info "No such producer" {:client-id client-id}))))
 
 (defn list-producers
   []
   (keys @producers))
 
-(defn get-producer
-  [producer-name]
-  (get @producers producer-name))
-
 (defn produce!
-  [producer-name topic key value]
-  (if-let [producer (get @producers producer-name)]
+  [client-id topic key value]
+  (if-let [producer (get-producer client-id)]
     (jc/produce! producer topic key value)
-    (throw (ex-info "No such producer" {:producer-name producer-name}))))
+    (throw (ex-info "No such producer" {:client-id client-id}))))
 
-(defn close-producer
-  [producer-name]
-  (let [producer (get @producers producer-name)]
-    (.close ^KafkaProducer producer)
-   (swap! producers dissoc producer-name)))
-
-(defn close-producers
+(defn close-all-producers
   []
-  (doseq [producer-name (list-producers)]
-    (close-producer producer-name)))
-
+  (doseq [client-id (list-producers)]
+    (close-producer client-id)))
