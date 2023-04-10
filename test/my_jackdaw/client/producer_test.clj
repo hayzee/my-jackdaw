@@ -1,7 +1,8 @@
 (ns my-jackdaw.client.producer-test
   (:require [clojure.test :refer :all]
             [my-jackdaw.admin.client :as ac]
-            [my-jackdaw.client.producer :as sut]))
+            [my-jackdaw.client.producer :as sut])
+  (:import (clojure.lang ExceptionInfo)))
 
 (def producer-config
   {"bootstrap.servers" "localhost:9092"
@@ -16,7 +17,7 @@
   (testing "can get a producer"
     (is (not= nil (sut/get-producer "my-producer"))))
   (testing "cannot create the same producer twice"
-    (is (thrown? clojure.lang.ExceptionInfo (sut/create-producer "my-producer" producer-config))))
+    (is (thrown? ExceptionInfo (sut/create-producer "my-producer" producer-config))))
   (testing "can close (and remove) a producer"
     (is (= false (contains? (sut/close-producer "my-producer") "my-producer")))))
 

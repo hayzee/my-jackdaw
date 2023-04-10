@@ -28,11 +28,11 @@
   (keys @producers))
 
 (defn produce!
-  {:doc "Helper wrapping `#'send!`.
+  "Helper wrapping `#'send!`.
 
-   Builds and sends a `ProducerRecord` so you don't have to.
-   Returns a future which will produce datafied record metadata when forced."
-   :arglists '([client-id topic value]
+  Builds and sends a `ProducerRecord` so you don't have to.
+  Returns a future which will produce datafied record metadata when forced."
+  {:arglists '([client-id topic value]
                [client-id topic key value]
                [client-id topic partition key value]
                [client-id topic partition timestamp key value]
