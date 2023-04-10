@@ -1,5 +1,6 @@
 (ns my-jackdaw.client.producer-test
   (:require [clojure.test :refer :all]
+            [my-jackdaw.admin.client :as ac]
             [my-jackdaw.client.producer :as sut]))
 
 (def producer-config
@@ -19,7 +20,7 @@
   (testing "can close (and remove) a producer"
     (is (= false (contains? (sut/close-producer "my-producer") "my-producer")))))
 
-(deftest producer-tests
+(deftest multi-producer-tests
   (sut/create-producer "my-producer" producer-config)
   (sut/create-producer "my-producer-2" producer-config)
   (sut/create-producer "my-producer-3" producer-config)
@@ -29,3 +30,14 @@
     (sut/close-all-producers)
     (is (= 0 (count (sut/list-producers))))))
 
+(deftest producer-producing-tests
+  (testing "can create a producer"
+    (sut/create-producer "some-producer" producer-config)
+    (is (= {:topic-name "test-topic",
+            :partition 0,
+            :serialized-key-size 4,
+            :serialized-value-size 4}
+           (-> @(sut/produce! "some-producer" {:topic-name "test-topic"} "key1" "val1")
+               (select-keys [:topic-name :partition :serialized-key-size :serialized-value-size]))))
+    (sut/close-all-producers)
+    (ac/delete-topics! [{:topic-name "test-topic"}])))

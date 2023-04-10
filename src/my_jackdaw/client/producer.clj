@@ -28,9 +28,18 @@
   (keys @producers))
 
 (defn produce!
-  [client-id topic key value]
+  {:doc "Helper wrapping `#'send!`.
+
+   Builds and sends a `ProducerRecord` so you don't have to.
+   Returns a future which will produce datafied record metadata when forced."
+   :arglists '([client-id topic value]
+               [client-id topic key value]
+               [client-id topic partition key value]
+               [client-id topic partition timestamp key value]
+               [client-id topic partition timestamp key value headers])}
+  [client-id & args]
   (if-let [producer (get-producer client-id)]
-    (jc/produce! producer topic key value)
+    (apply jc/produce! (cons producer args))
     (throw (ex-info "No such producer" {:client-id client-id}))))
 
 (defn close-all-producers
