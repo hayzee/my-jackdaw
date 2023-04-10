@@ -15,12 +15,36 @@
             (.commitSync consumer))
           (recur))))))
 
-(defn- process-messages! [consumer-config topic-config processing-fn continue?]
+(defn- process-messages!
+  [consumer-config topic-config processing-fn continue?]
   (with-open [consumer (jc/subscribed-consumer consumer-config [topic-config])]
     (poll-and-loop! consumer processing-fn continue?)))
 
-(defn create-consumer [consumer-config topic-config processing-fn]
-  (let [continue? (atom true)]
-   {:continue? continue?
-    :process (future (process-messages! consumer-config topic-config processing-fn continue?))}))
+(defn get-consumer
+  [consumer-name]
+  (get @consumers consumer-name))
 
+(defn create-consumer
+  [consumer-name consumer-config topic-config processing-fn]
+  (if (get-consumer consumer-name)
+    (throw (ex-info "Consumer already exists" {:consumer-name consumer-name}))
+    (let [continue? (atom true)]
+      (swap! consumers
+             assoc
+             consumer-name {:stopper-fn (fn [] (swap! continue? not))
+                            :process    (future (process-messages! consumer-config topic-config processing-fn continue?))}))))
+
+(defn stop-consumer
+  [consumer-name]
+  (if-let [consumer (get-consumer consumer-name)]
+    (:stopper-fn consumer)
+    (throw (ex-info "No such producer" {:client-id consumer-name}))))
+
+(defn list-consumers
+  []
+  (keys @consumers))
+
+(defn stop-all-consumers
+  []
+  (doseq [consumer-name (list-consumers)]
+    (stop-consumer consumer-name)))
