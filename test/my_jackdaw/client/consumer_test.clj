@@ -20,10 +20,16 @@
   (testing "cannot create the same consumer twice"
     (is (thrown? ExceptionInfo (sut/create-consumer "my-consumer" consumer-config topic-config identity))))
   (testing "can close a consumer"
-    (is (sut/stop-consumer "my-consumer"))))
+    (is (= false (contains? (sut/stop-consumer "my-consumer") "my-consumer"))))
+  (testing "cannot close the same consumer twice"
+    (is (thrown? ExceptionInfo (sut/stop-consumer "my-consumer")))))
 
-(future-cancel (:process (get @@#'sut/consumers "my-consumer")))
-
-(def f (future 1))
-
-(future-done? f)
+(deftest multi-consumer-tests
+  (sut/create-consumer "my-consumer" consumer-config topic-config identity)
+  (sut/create-consumer "my-consumer2" consumer-config topic-config identity)
+  (sut/create-consumer "my-consumer3" consumer-config topic-config identity)
+  (testing "can list producers"
+    (is (= 3 (count (sut/list-consumers)))))
+  (testing "can close (and remove) all producers"
+    (sut/stop-all-consumers)
+    (is (= 0 (count (sut/list-consumers))))))

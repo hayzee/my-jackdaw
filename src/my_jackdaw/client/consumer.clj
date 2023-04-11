@@ -1,5 +1,6 @@
 (ns my-jackdaw.client.consumer
-  (:require [jackdaw.client :as jc]))
+  (:require [jackdaw.client :as jc]
+            [taoensso.timbre :refer [info]]))
 
 (defonce ^:private consumers (atom {}))
 
@@ -16,9 +17,11 @@
           (recur))))))
 
 (defn- process-messages!
-  [consumer-config topic-config processing-fn continue?]
+  [consumer-name consumer-config topic-config processing-fn continue?]
+  (info "Consumer " consumer-name " - stopped")
   (with-open [consumer (jc/subscribed-consumer consumer-config [topic-config])]
-    (poll-and-loop! consumer processing-fn continue?)))
+    (poll-and-loop! consumer processing-fn continue?))
+  (info "Consumer " consumer-name " - stopped"))
 
 (defn get-consumer
   [consumer-name]
@@ -32,12 +35,13 @@
       (swap! consumers
              assoc
              consumer-name {:stopper-fn (fn [] (swap! continue? not))
-                            :process    (future (process-messages! consumer-config topic-config processing-fn continue?))}))))
+                            :process    (future (process-messages! consumer-name consumer-config topic-config processing-fn continue?))}))))
 
 (defn stop-consumer
   [consumer-name]
   (if-let [consumer (get-consumer consumer-name)]
-    (:stopper-fn consumer)
+    (do ((:stopper-fn consumer))
+        (swap! consumers dissoc consumer-name))
     (throw (ex-info "No such producer" {:client-id consumer-name}))))
 
 (defn list-consumers
