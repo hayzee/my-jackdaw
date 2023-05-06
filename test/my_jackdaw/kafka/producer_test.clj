@@ -1,7 +1,7 @@
-(ns my-jackdaw.client.producer-test
+(ns my-jackdaw.kafka.producer-test
   (:require [clojure.test :refer :all]
-            [my-jackdaw.admin.client :as ac]
-            [my-jackdaw.client.producer :as sut])
+            [my-jackdaw.kafka.admin :as ac]
+            [my-jackdaw.kafka.producer :as sut])
   (:import (clojure.lang ExceptionInfo)))
 
 (def producer-config
@@ -41,4 +41,4 @@
            (-> @(sut/produce! "some-producer" {:topic-name "test-topic"} "key1" "val1")
                (select-keys [:topic-name :partition :serialized-key-size :serialized-value-size]))))
     (sut/close-all-producers)
-    (ac/delete-topics! [{:topic-name "test-topic"}])))
+    (jackdaw.admin/delete-topics! ac/client [{:topic-name "test-topic"}])))

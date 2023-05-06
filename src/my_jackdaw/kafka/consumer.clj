@@ -1,4 +1,4 @@
-(ns my-jackdaw.client.consumer
+(ns my-jackdaw.kafka.consumer
   (:require [jackdaw.client :as jc]
             [taoensso.timbre :refer [info]]))
 

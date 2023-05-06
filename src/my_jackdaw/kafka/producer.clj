@@ -1,4 +1,4 @@
-(ns my-jackdaw.client.producer
+(ns my-jackdaw.kafka.producer
   (:require [jackdaw.client :as jc])
   (:import (org.apache.kafka.clients.producer KafkaProducer)))
 

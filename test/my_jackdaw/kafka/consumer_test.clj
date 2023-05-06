@@ -1,6 +1,6 @@
-(ns my-jackdaw.client.consumer-test
+(ns my-jackdaw.kafka.consumer-test
   (:require [clojure.test :refer :all]
-            [my-jackdaw.client.consumer :as sut])
+            [my-jackdaw.kafka.consumer :as sut])
   (:import (clojure.lang ExceptionInfo)))
 
 (def consumer-config

@@ -23,4 +23,6 @@
                  ;config
                  [aero "1.1.6"]]
 
-  :repl-options {:init-ns my-jackdaw.core})
+  ; :repl-options {:init-ns my-jackdaw.core}
+
+  )
