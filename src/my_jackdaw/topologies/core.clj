@@ -4,6 +4,7 @@
     [my-jackdaw.kafka.admin :as admin]
     [jackdaw.admin :as ja]
     [jackdaw.streams :as j]
+    [jackdaw.serdes.edn :as edn]
     [jackdaw.serdes :as serdes]))
 
 (def topic-metadata
@@ -28,6 +29,8 @@
 
  (ja/list-topics admin/client)
 
+ (ja/delete-topics! admin/client (ja/list-topics admin/client))
+
  )
 
 
@@ -51,11 +54,19 @@
 
       builder)))
 
+
+
 (defn -main
   [& args]
-  (let [app-config (into {"client-id" (str "client:" (str *ns*))
+  (let [app-config (into {
+                          ;"client-id" (str "client:" (str *ns*))
                           "application.id" (str *ns*)
-                          "state.dir" "C:\\X-Drive\\temp\\kafka-streams"}
+;                          "state.dir" "C:\\X-Drive\\temp\\kafka-streams"
+;                          "state.dir" "~/kafka-streams"
+                          "default.key.serde" (class (serdes/string-serde))
+                          "default.value.serde" (class (serdes/string-serde))
+                          ;                          :value-serde (serdes/edn-serde)
+                          }
                          admin/client-config)
 
         builder (j/streams-builder)
@@ -68,10 +79,10 @@
 
   (def app (-main))
 
-
+  (.state app)
 
   (j/close app)
 
- )
+  )
 
 

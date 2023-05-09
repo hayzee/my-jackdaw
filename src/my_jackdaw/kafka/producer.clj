@@ -1,6 +1,8 @@
 (ns my-jackdaw.kafka.producer
-  (:require [jackdaw.client :as jc])
-  (:import (org.apache.kafka.clients.producer KafkaProducer)))
+  (:require [jackdaw.client :as jc]
+            [my-jackdaw.kafka.admin :as admin])
+  (:import (org.apache.kafka.clients.producer KafkaProducer)
+           (org.apache.kafka.common.utils Bytes)))
 
 (defonce ^:private producers (atom {}))
 
@@ -46,3 +48,18 @@
   []
   (doseq [client-id (list-producers)]
     (close-producer client-id)))
+
+(defn send-to-topic
+  "Sends edn 'k'ey and 'v'alues to topic."
+  [topic-name k v]
+  (let [producer-config
+        (into admin/client-config
+              {"key.serializer"   "org.apache.kafka.common.serialization.BytesSerializer"
+               "value.serializer" "org.apache.kafka.common.serialization.BytesSerializer"
+               "acks"             "all"
+               "client.id"        "send-to-topic"})]
+    (with-open [my-producer (jc/producer producer-config)]
+      @(jc/produce! my-producer
+                    {:topic-name topic-name}
+                    (new Bytes (.getBytes (pr-str k)))
+                    (new Bytes (.getBytes (pr-str v)))))))
