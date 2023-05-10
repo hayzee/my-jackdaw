@@ -42,7 +42,7 @@
    :dev           [:project/dev :profiles/dev]
    :test          [:project/dev :project/test :profiles/test]
 
-   :project/dev  { ; :jvm-opts ["-Dconf=dev-config.edn"]  ; see https://github.com/tolitius/cprop
+   :project/dev  {; :jvm-opts ["-Dconf=dev-config.edn"]  ; see https://github.com/tolitius/cprop
                   :dependencies [[org.apache.kafka/kafka-streams-test-utils "3.3.2"]]
 
                   :source-paths ["env/dev/clj"]
@@ -53,7 +53,6 @@
                                ]
                   }
    :project/test {; :jvm-opts ["-Dconf=test-config.edn"]  ; see https://github.com/tolitius/cprop
-                  :dependencies [[org.apache.kafka/kafka-streams-test-utils "3.3.2"]]
 
                   :resource-paths ["env/test/resources"]
                   :injections [
@@ -61,5 +60,4 @@
                                ]
                   }
    :profiles/dev {}
-   :profiles/test {}}
-  )
+   :profiles/test {}})
