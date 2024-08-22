@@ -1,6 +1,7 @@
 (ns my-jackdaw.kafka.consumer
   (:require [jackdaw.client :as jc]
-            [taoensso.timbre :refer [info]]))
+            [taoensso.timbre :refer [info]])
+  (:import (org.apache.kafka.common.serialization Serializer)))
 
 (defonce ^:private consumers (atom {}))
 
@@ -53,18 +54,13 @@
   (doseq [consumer-name (list-consumers)]
     (stop-consumer consumer-name)))
 
-
-
-
 (defn read-topic
   [topic-name]
   (let [processing-fn (fn [records] records)
-        consumer-config {"bootstrap.servers" "localhost:9092"
+        consumer-config {"bootstrap.servers" "localhost:9094"
                          "group.id" "com.foo.my-consumer"
                          "key.deserializer" "org.apache.kafka.common.serialization.BytesDeserializer"
                          "value.deserializer" "org.apache.kafka.common.serialization.BytesDeserializer"}]
    (with-open [consumer (-> (jc/subscribed-consumer consumer-config [{:topic-name topic-name}])
                             (jc/seek-to-beginning-eager))]
-     ;(poll-and-loop! consumer processing-fn (atom true))
-     (println "running")
-     (processing-fn (jc/poll consumer 1000)))))
+     (processing-fn (jc/poll consumer 20)))))

@@ -7,7 +7,9 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
 
-  :dependencies [[org.clojure/clojure "1.11.1"]
+  :dependencies [
+
+                 [org.clojure/clojure "1.11.1"]
 
                  ; kafka / jackdaw
                  [fundingcircle/jackdaw "0.9.11"]
@@ -18,11 +20,14 @@
                  [com.taoensso/timbre "6.1.0"]
 
                  ; components
-                 ; [mount "0.1.17"]
+                 [mount "0.1.18"]
 
                  ; config
                  ; [aero "1.1.6"]
-                 ; [cprop "0.1.19"]
+                 [cprop "0.1.20"]
+
+                 ; banner text
+                 [clj-figlet "0.1.1"]
 
                  ]
 
@@ -43,7 +48,8 @@
    :test          [:project/dev :project/test :profiles/test]
 
    :project/dev  {; :jvm-opts ["-Dconf=dev-config.edn"]  ; see https://github.com/tolitius/cprop
-                  :dependencies [[org.apache.kafka/kafka-streams-test-utils "3.3.2"]]
+                  :dependencies [[org.clojure/tools.namespace "1.5.0"]
+                                 [org.apache.kafka/kafka-streams-test-utils "3.3.2"]]
 
                   :source-paths ["env/dev/clj"]
                   :resource-paths ["env/dev/resources"]
@@ -59,5 +65,5 @@
                                (println "Running with test profile!")
                                ]
                   }
-   :profiles/dev {}
-   :profiles/test {}})
+   :profiles/dev {:env {:project :dev}}
+   :profiles/test {:env {:project :test}}})

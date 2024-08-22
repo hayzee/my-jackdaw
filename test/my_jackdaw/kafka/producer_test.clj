@@ -5,7 +5,7 @@
   (:import (clojure.lang ExceptionInfo)))
 
 (def producer-config
-  {"bootstrap.servers" "localhost:9092"
+  {"bootstrap.servers" "localhost:9094"
    "key.serializer" "org.apache.kafka.common.serialization.StringSerializer"
    "value.serializer" "org.apache.kafka.common.serialization.StringSerializer"
    "acks" "all"

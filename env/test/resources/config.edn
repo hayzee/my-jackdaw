@@ -1,1 +1,2 @@
-{}
+{:profile   :test
+ :log-level :warn}

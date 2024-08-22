@@ -1,1 +1,2 @@
-{:admin-client {"bootstrap.servers" "localhost:9092"}}
+{:profile :none
+ :kafka-config {"bootstrap.servers" "localhost:9094"}}
